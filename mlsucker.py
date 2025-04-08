@@ -11,12 +11,12 @@ import random
 def get_price(node):
     # Função para obter o preço do nó da página
     price_node = node.find('span', class_='andes-money-amount__fraction')
-    cents_node = node.find('span', class_='andes-money-amount__decimals')
+    cents_node = node.find('span', class_='andes-money-amount__cents')
     
     if price_node is not None:
         price = price_node.text.strip()
         if cents_node is not None:
-            price += ',' + cents_node.text.strip()
+            price = price + ',' + cents_node.text.strip()
         return price
     return None
 
@@ -96,13 +96,7 @@ products = []
 with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
     writer = csv.writer(arquivo_csv, delimiter=',')
     writer.writerow([
-        'ID', 'Type', 'SKU', 'Name', 'Published', 'Is featured?', 'Visibility in catalog', 'Short description',
-        'Description', 'Date sale price starts', 'Date sale price ends', 'Tax status', 'Tax class', 'In stock?',
-        'Stock', 'Low stock amount', 'Backorders allowed?', 'Sold individually?', 'Weight (kg)', 'Length (cm)',
-        'Width (cm)', 'Height (cm)', 'Allow customer reviews?', 'Purchase note', 'Sale price', 'Regular price',
-        'Shipping class', 'Download limit', 'Download expiry days', 'Parent',
-        'Grouped products', 'Upsells', 'Cross-sells', 'External URL', 'Button text', 'Position', 'Attribute 1 name',
-        'Attribute 1 value(s)', 'Attribute 1 visible', 'Attribute 1 global', 'Attribute 1 default'
+        'Ordem', 'Titulo', 'Preco' #, 'Frete Grátis', 'URL', 'Descrição'
     ])
 
     while True:
@@ -114,16 +108,13 @@ with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
                 produto = div.find('a', class_='poly-component__title')
                 link = produto.get('href')
                 titulo = produto.next_element
-
-                # Obter preço usando a função get_price
-                valor_desconto_str = get_price(div)
-
+                preco = get_price(div)
                 frete_gratis = bool(div.find("p", class_="ui-search-item__shipping ui-search-item__shipping--free"))
 
                 if link is not None:
                     response_produto = requests.get(link, headers=headers)
                 else:
-                    continue  # Pula para a próxima iteração do loop
+                    continue
 
                 site_produto = BeautifulSoup(response_produto.text, 'html.parser')
                 descricao = site_produto.find('p', class_='ui-pdp-description__content')
@@ -132,42 +123,21 @@ with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
                     descricao_text = '<h1>' + produto.next_element + '</h1>\n\n' + descricao.text.strip()
                 else:
                     descricao_text = "Vendedor não inseriu descrição."
-
-                sku = site_produto.find('span', class_='ui-pdp-buybox__sku-value')
-                if sku:
-                    sku = sku.get_text(strip=True, separator='\n')
-                else:
-                    sku = '' + ''.join(random.choices('6789', k=13))
+                    
+         #       if site_produto.find('symbol', id_='full_icon') != None:
+         #           envio_full = 'Não'
+         #       else:
+         #           envio_full = 'Sim'
 
                 writer.writerow([
-                    i, 'simple', sku, titulo, published_default, is_featured_default, visibility_default,
-                    short_description_default, descricao_text, date_sale_price_starts_default,
-                    date_sale_price_ends_default, tax_status_default, tax_class_default, in_stock_default,
-                    stock_default, low_stock_amount_default, backorders_allowed_default, sold_individually_default,
-                    weight_default, length_default, width_default, height_default, allow_customer_reviews_default,
-                    purchase_note_default, valor_desconto_str, valor_desconto_str,
-                    shipping_class_default, download_limit_default, download_expiry_days_default,
-                    parent_default, grouped_products_default, upsells_default, cross_sells_default,
-                    external_url_default, button_text_default, position_default, attribute_name_default,
-                    attribute_value_default, attribute_visible_default, attribute_global_default,
-                    attribute_default_default
+                    i, titulo, preco #, frete_gratis, link, descricao_text
                 ])
 
                 products.append([
-                    i, 'simple', sku, titulo, published_default, is_featured_default, visibility_default,
-                    short_description_default, descricao_text, date_sale_price_starts_default,
-                    date_sale_price_ends_default, tax_status_default, tax_class_default, in_stock_default,
-                    stock_default, low_stock_amount_default, backorders_allowed_default, sold_individually_default,
-                    weight_default, length_default, width_default, height_default, allow_customer_reviews_default,
-                    purchase_note_default, valor_desconto_str, valor_desconto_str,
-                    shipping_class_default, download_limit_default, download_expiry_days_default,
-                    parent_default, grouped_products_default, upsells_default, cross_sells_default,
-                    external_url_default, button_text_default, position_default, attribute_name_default,
-                    attribute_value_default, attribute_visible_default, attribute_global_default,
-                    attribute_default_default
+                    i, titulo, preco #, frete_gratis, link, descricao_text
                 ])
 
-                print('Codigo: ' + str(i) + ', Produto: ' + titulo + ', Valor: ' + str(valor_desconto_str))
+                print('Codigo: ' + str(i) + ', Produto: ' + titulo + ', Valor: ' + str(preco))
                 print("==========================")
 
                 i += 1
@@ -190,9 +160,6 @@ with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
             print(caminho_arquivo)
 
             break
-
-# Remover produtos duplicados
-unique_products, duplicate_products = remove_duplicates(products)
 
 print("Arquivo CSV salvo com sucesso:")
 print(caminho_arquivo)
