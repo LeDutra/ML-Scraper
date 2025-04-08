@@ -47,12 +47,6 @@ i = 1
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0'}
 termo_busca = input("Digite o termo de busca: ")
-tags = input("Digite as tags separadas por vírgulas: ").split(',')
-categoria = input("Digite a categoria dos produtos: ")
-
-# Pergunta sobre o termo de substituição
-termo_substituicao = input("Digite o termo para substituir 'MercadoLivre' (ou pressione Enter para não substituir): ")
-termo_substituicao = termo_substituicao.strip()
 
 base_url = f"https://lista.mercadolivre.com.br/{termo_busca}"
 
@@ -106,9 +100,9 @@ with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
         'Description', 'Date sale price starts', 'Date sale price ends', 'Tax status', 'Tax class', 'In stock?',
         'Stock', 'Low stock amount', 'Backorders allowed?', 'Sold individually?', 'Weight (kg)', 'Length (cm)',
         'Width (cm)', 'Height (cm)', 'Allow customer reviews?', 'Purchase note', 'Sale price', 'Regular price',
-        'Categories', 'Tags', 'Shipping class', 'Images', 'Download limit', 'Download expiry days', 'Parent',
+        'Shipping class', 'Download limit', 'Download expiry days', 'Parent',
         'Grouped products', 'Upsells', 'Cross-sells', 'External URL', 'Button text', 'Position', 'Attribute 1 name',
-        'Attribute 1 value(s)', 'Attribute 1 visible', 'Attribute 1 global', 'Attribute 1 default', 'Video'
+        'Attribute 1 value(s)', 'Attribute 1 visible', 'Attribute 1 global', 'Attribute 1 default'
     ])
 
     while True:
@@ -116,44 +110,28 @@ with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
             page = requests.get(base_url, headers=headers)
             soup = BeautifulSoup(page.text, "html.parser")
 
-            for div in soup.find_all('div', class_='ui-search-result__content-wrapper'):
-                produto = div.find('h2', class_='ui-search-item__title')
-                link = div.find("a", class_="ui-search-link")
+            for div in soup.find_all('div', class_='ui-search-result__wrapper'):
+                produto = div.find('a', class_='poly-component__title')
+                link = produto.get('href')
+                titulo = produto.next_element
 
                 # Obter preço usando a função get_price
                 valor_desconto_str = get_price(div)
 
-                imagens = []
-                video = ''
-
                 frete_gratis = bool(div.find("p", class_="ui-search-item__shipping ui-search-item__shipping--free"))
 
                 if link is not None:
-                    response_produto = requests.get(link['href'], headers=headers)
+                    response_produto = requests.get(link, headers=headers)
                 else:
                     continue  # Pula para a próxima iteração do loop
 
                 site_produto = BeautifulSoup(response_produto.text, 'html.parser')
                 descricao = site_produto.find('p', class_='ui-pdp-description__content')
 
-                if descricao:
-                    # Substituir todas as variações de "MercadoLivre" por "termo_substituicao" se o termo de substituição for informado
-                    if termo_substituicao:
-                        descricao_text = '<h1>' + produto.text + '</h1>\n\n' + descricao.text.strip().replace('MercadoLivre', termo_substituicao).replace('Mercado Livre', termo_substituicao).replace('Mercado-Livre', termo_substituicao).replace('MercadoLivre', termo_substituicao)
-                    else:
-                        descricao_text = '<h1>' + produto.text + '</h1>\n\n' + descricao.text.strip()
+                if descricao != None:
+                    descricao_text = '<h1>' + produto.next_element + '</h1>\n\n' + descricao.text.strip()
                 else:
-                    # Quando não encontrar uma descrição, inserir o título do produto
-                    descricao_text = '<h1>' + produto.text + '</h1>\n\n' + produto.text
-
-                # Buscar imagens dentro do bloco do produto
-                imagem_tags = site_produto.find_all('img', class_='ui-pdp-image ui-pdp-gallery__figure__image')
-                
-                for imagem in imagem_tags:
-                    if 'data-zoom' in imagem.attrs:
-                        imagens.append(imagem['data-zoom'])
-
-                imagens_str = ', '.join(imagens)
+                    descricao_text = "Vendedor não inseriu descrição."
 
                 sku = site_produto.find('span', class_='ui-pdp-buybox__sku-value')
                 if sku:
@@ -162,72 +140,46 @@ with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
                     sku = '' + ''.join(random.choices('6789', k=13))
 
                 writer.writerow([
-                    i, 'simple', sku, produto.text, published_default, is_featured_default, visibility_default,
+                    i, 'simple', sku, titulo, published_default, is_featured_default, visibility_default,
                     short_description_default, descricao_text, date_sale_price_starts_default,
                     date_sale_price_ends_default, tax_status_default, tax_class_default, in_stock_default,
                     stock_default, low_stock_amount_default, backorders_allowed_default, sold_individually_default,
                     weight_default, length_default, width_default, height_default, allow_customer_reviews_default,
-                    purchase_note_default, valor_desconto_str, valor_desconto_str, categoria, ', '.join(tags),
-                    shipping_class_default, ', '.join(imagens), download_limit_default, download_expiry_days_default,
+                    purchase_note_default, valor_desconto_str, valor_desconto_str,
+                    shipping_class_default, download_limit_default, download_expiry_days_default,
                     parent_default, grouped_products_default, upsells_default, cross_sells_default,
                     external_url_default, button_text_default, position_default, attribute_name_default,
                     attribute_value_default, attribute_visible_default, attribute_global_default,
-                    attribute_default_default, video
+                    attribute_default_default
                 ])
 
                 products.append([
-                    i, 'simple', sku, produto.text, published_default, is_featured_default, visibility_default,
+                    i, 'simple', sku, titulo, published_default, is_featured_default, visibility_default,
                     short_description_default, descricao_text, date_sale_price_starts_default,
                     date_sale_price_ends_default, tax_status_default, tax_class_default, in_stock_default,
                     stock_default, low_stock_amount_default, backorders_allowed_default, sold_individually_default,
                     weight_default, length_default, width_default, height_default, allow_customer_reviews_default,
-                    purchase_note_default, valor_desconto_str, valor_desconto_str, categoria, ', '.join(tags),
-                    shipping_class_default, ', '.join(imagens), download_limit_default, download_expiry_days_default,
+                    purchase_note_default, valor_desconto_str, valor_desconto_str,
+                    shipping_class_default, download_limit_default, download_expiry_days_default,
                     parent_default, grouped_products_default, upsells_default, cross_sells_default,
                     external_url_default, button_text_default, position_default, attribute_name_default,
                     attribute_value_default, attribute_visible_default, attribute_global_default,
-                    attribute_default_default, video
+                    attribute_default_default
                 ])
 
-                print('Código: ' + str(i) + ', Produto: ' + produto.text + ', Valor: ' + str(valor_desconto_str))
+                print('Código: ' + str(i) + ', Produto: ' + titulo + ', Valor: ' + str(valor_desconto_str))
                 print("==========================")
-
-                if link:
-                    print('Link: ' + link['href'])
-
-                if descricao_text:
-                    print('Descrição do produto: ' + descricao_text)
-                else:
-                    print('Descrição do produto não encontrada.')
-
-                if imagens:
-                    print('Imagens: ' + ', '.join(imagens))
-                else:
-                    print('Nenhuma imagem encontrada.')
-
-                if video:
-                    print('Video: ' + video)
-
-                if frete_gratis:
-                    print('Frete grátis')
-
-                if sku:
-                    print('SKU: ' + sku)
-
-                if tags:
-                    print('Tags: ' + ', '.join(tags))
-                else:
-                    print('Nenhuma tag encontrada.')
 
                 i += 1
 
             next_link = soup.select_one("a.andes-pagination__link:-soup-contains(Seguinte)")
 
-            if not next_link:
+            if next_link == None:
                 break
-
-            next_url = urljoin(base_url, next_link['href'])
+            
+            next_url = next_link.get('href')
             base_url = next_url
+                
 
             # Aguardar um tempo aleatório entre 0.5 e 2.5 segundos entre as solicitações para evitar o bloqueio por sobrecarga no servidor
             time.sleep(random.uniform(0.5, 2.5))
