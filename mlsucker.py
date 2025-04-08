@@ -1,5 +1,3 @@
-#!/usr/local/bin/python
-# coding: latin-1
 import csv
 import os
 import requests
