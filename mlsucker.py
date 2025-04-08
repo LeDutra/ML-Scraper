@@ -32,7 +32,6 @@ def remove_duplicates(products):
         description = product[8]
         value = product[26]
 
-        # Verificar se o título e descrição já foram vistos
         if (title, description) in seen_titles and (title, value) in seen_descriptions:
             duplicate_products.append(product)
         else:
