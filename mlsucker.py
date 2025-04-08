@@ -167,19 +167,18 @@ with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
                     attribute_default_default
                 ])
 
-                print('Código: ' + str(i) + ', Produto: ' + titulo + ', Valor: ' + str(valor_desconto_str))
+                print('Codigo: ' + str(i) + ', Produto: ' + titulo + ', Valor: ' + str(valor_desconto_str))
                 print("==========================")
 
                 i += 1
 
             next_link = soup.select_one("a.andes-pagination__link:-soup-contains(Seguinte)")
 
-            if next_link == None:
+            if not next_link:
                 break
             
             next_url = next_link.get('href')
             base_url = next_url
-                
 
             # Aguardar um tempo aleatório entre 0.5 e 2.5 segundos entre as solicitações para evitar o bloqueio por sobrecarga no servidor
             time.sleep(random.uniform(0.5, 2.5))
@@ -194,12 +193,6 @@ with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
 
 # Remover produtos duplicados
 unique_products, duplicate_products = remove_duplicates(products)
-
-# Exibir a quantidade de produtos duplicados e quais foram eles
-print(f"Quantidade de produtos duplicados encontrados: {len(duplicate_products)}")
-print("Produtos duplicados:")
-for duplicate in duplicate_products:
-    print(duplicate)
 
 print("Arquivo CSV salvo com sucesso:")
 print(caminho_arquivo)
