@@ -9,7 +9,7 @@ import time
 import random
 
 def get_price(node):
-    # Função para obter o preço do nó da página
+
     price_node = node.find('span', class_='andes-money-amount__fraction')
     cents_node = node.find('span', class_='andes-money-amount__cents')
     
@@ -41,7 +41,6 @@ def remove_duplicates(products):
 
     return unique_products, duplicate_products
 
-
 i = 1
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0'}
@@ -52,42 +51,6 @@ base_url = f"https://lista.mercadolivre.com.br/{termo_busca}"
 # Caminho e nome do arquivo CSV
 nome_arquivo = f"dados_produtos_ml_{termo_busca[:10]}.csv"
 caminho_arquivo = os.path.abspath(nome_arquivo)
-
-# Valores padrão do WooCommerce
-published_default = '1'  # Publicado, 0 para Não Publicado
-is_featured_default = '0'  # Não é destaque
-visibility_default = 'visible'  # Visível no catálogo
-short_description_default = ''  # Descrição curta em branco
-date_sale_price_starts_default = ''  # Data de início da promoção em branco
-date_sale_price_ends_default = ''  # Data de término da promoção em branco
-tax_status_default = 'none'  # Não Tributável
-tax_class_default = ''  # Classe de imposto em branco
-in_stock_default = '1'  # Em estoque
-stock_default = ''  # Quantidade em estoque em branco
-low_stock_amount_default = ''  # Quantidade baixa em estoque em branco
-backorders_allowed_default = 'no'  # Backorders não permitidos
-sold_individually_default = 'yes'  # Vendido individualmente
-weight_default = ''  # Peso em branco
-length_default = ''  # Comprimento em branco
-width_default = ''  # Largura em branco
-height_default = ''  # Altura em branco
-allow_customer_reviews_default = 'no'  # Avaliações de clientes não permitidas
-purchase_note_default = ''  # Nota de compra em branco
-shipping_class_default = ''  # Classe de envio em branco
-download_limit_default = ''  # Limite de download em branco
-download_expiry_days_default = ''  # Dias de expiração do download em branco
-parent_default = ''  # Produto pai em branco
-grouped_products_default = ''  # Produtos agrupados em branco
-upsells_default = ''  # Upsells em branco
-cross_sells_default = ''  # Cross-sells em branco
-external_url_default = ''  # URL externa em branco
-button_text_default = ''  # Texto do botão em branco
-position_default = ''  # Posição em branco
-attribute_name_default = ''  # Nome do atributo em branco
-attribute_value_default = ''  # Valor do atributo em branco
-attribute_visible_default = ''  # Visibilidade do atributo em branco
-attribute_global_default = ''  # Global do atributo em branco
-attribute_default_default = ''  # Valor padrão do atributo em branco
 
 # Listas para armazenar produtos e duplicatas
 products = []
